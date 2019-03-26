@@ -14,7 +14,7 @@
 2. 採用三階段輕量的網路聯集架構，每個階段是從粗到細的過程。
 3. 提出新的online hard sample mining。
 
-## 網路 架構詳解
+## 網路架構詳解
 
 MTCNN的CNN網路結構是參考[A Convolutional Neural Network Cascade for Face Detection[1]](http://users.eecs.northwestern.edu/~xsh835/assets/cvpr2015_cascnn.pdf)，基於此篇的多重卷積神經網路人臉偵測，MTCNN作者針對上述論文的方法提出幾個缺點 :
 
@@ -34,13 +34,9 @@ MTCNN的CNN網路結構是參考[A Convolutional Neural Network Cascade for Face
 
 ![pipeline](images/pipeline.png)
 
-主要分為三個階段與網路，Proposal Network(P-Net)、Refine Network(R-Net)、Output Network(O-Net)，其各自的流程為上圖。看似三層網路可能是相連且參數量較多，但實際上各層網路中間還需要經過轉換處理，大致上理解是用bounding box regression vectors去矯正候選框與用NMS(Non-maximum suppresion)融合高重合候選框，其詳細架構為下圖。下列是三層CNNs的目的與說明 : 
+主要分為一項前置作業與三個階段網路 : image > image pyramind、Proposal Network(P-Net)、Refine Network(R-Net)、Output Network(O-Net)，其各自的流程為上圖。看似三層網路可能是相連且參數量較多，但實際上各層網路中間還需要經過轉換處理，大致上理解是用bounding box regression vectors去矯正候選框與用NMS(Non-maximum suppresion)融合高重合候選框，其詳細架構為下圖。下列是前置作業、三層CNNs跟網路中間處理的目的與說明 : 
 
-1. **Proposal Network(P-Net)** : 是一個全卷積網路(fully convolutional neural network)，目的是產生候選框與bounding box regression vectors，且方法與[Multi-view Face Detection Using Depp Convolutional Neural Network[2]](https://arxiv.org/pdf/1502.02766.pdf)相似。
-
-    *理解與補充* :
-
-    卷積、池化、非線性激勵(激活)都能接受非一致的輸入圖片尺度大小，全連接(fully connection)則是要固定輸入。P-Net在訓練時是固定的輸入大小(12 x 12 x 3)，雖然在測試時是不需要將輸入的圖片一致resize到12 x 12。但在P-Net收到raw image之前，會先有一個階段將圖像轉成圖像金字塔(image pyramid)，我認為resize的目的是由於訓練時是固定的，所以為了更符合模型，在測試時識別各尺度的人臉準確度提升。缺點是速度降低 : 1. 生成圖像金字塔速度慢 2.  每種尺度(scale)的圖片都需要輸入模型。
+1. **Image Pyramid Stage** : 在P-Net收到raw image之前，會先將圖像轉成圖像金字塔(image pyramid)，我認為目的是由於訓練時是固定的，所以為了更符合模型，在測試時識別各尺度的人臉準確度提升。缺點是速度降低 : 1. 生成圖像金字塔速度慢 2. 每種尺度(scale)的圖片都需要輸入模型。
 
     圖像金字塔主要是依照原圖給定不同大小的縮放。在MTCNN中圖像金字塔與face minimum size有關 : 
 
@@ -61,9 +57,15 @@ MTCNN的CNN網路結構是參考[A Convolutional Neural Network Cascade for Face
         factor_count += 1
     ```
 
-2. **Refine Network(R-Net)** : 是一個CNN，其輸入為P-Net輸出的候選框，目的是剔除錯誤(沒有人臉)的候選框。
+2. **Proposal Network(P-Net)** : 是一個全卷積網路(fully convolutional neural network)，目的是產生候選框與bounding box regression vectors，且方法與[Multi-view Face Detection Using Depp Convolutional Neural Network[2]](https://arxiv.org/pdf/1502.02766.pdf)相似。
 
-3. **Output Network(O-Net)** : 與R-Net相似，但主要目的是更清楚描述人臉，會將R-Net輸出的候選框當作輸入，且一張人臉會產生一個最後的人臉框座標與五個人臉要點的位置。
+    *理解與補充* :
+
+    卷積、池化、非線性激勵(激活)都能接受非一致的輸入圖片尺度大小，全連接(fully connection)則是要固定輸入。P-Net在訓練時是固定的輸入大小(12 x 12 x 3)，本來在測試時是不需要將輸入的圖片resize，但為了提升準確度，有image pyramid stage。
+
+3. **Refine Network(R-Net)** : 是CNN，輸入為P-Net輸出的候選框，目的是剔除錯誤(沒有人臉)的候選框。
+
+4. **Output Network(O-Net)** : 與R-Net相似，但主要目的是更清楚描述人臉，會將R-Net輸出的候選框當作輸入，一張人臉會產生一個最後的人臉框座標與五個人臉要點的位置。
 
     ![architect](images/MTCNN_architect.png)
 
@@ -151,6 +153,7 @@ MTCNN的CNN網路結構是參考[A Convolutional Neural Network Cascade for Face
    2. face minimum size : 放大掃描人臉的最小框。當一張圖片上用slide window(face window)掃描原圖生成候選框時，框體面積增大而掃描面積固定導致速度會提升，但人臉小於基本框體則無法偵測出來。
 2.  網路 : 目前針對網路的部分只有一些想法，主要是此篇論文為2016年提出，在之後提出的方法與改念都可以用在優化的部分。目前可以分稱幾個部分 : 捲積、網路架構、池化、損失函數。
 3.  output : output的部分其實有牽涉到網路結構，雖然是改進網路結構，但主要的思想來自我認為不需要O-Net輸出的facial landmark，而facial landmark確實對人臉偵測有所幫助，因此想切除O-Net只做P-Net與R-Net。目前的結果不甚理想，不知道原因為何，速度在face minimum size = 20下只提升1~2fps且準確度略有下降。
+4.  框架 : 
 
 ## Source Code
 
