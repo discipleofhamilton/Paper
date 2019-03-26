@@ -10,7 +10,7 @@
 
 從摘要中可以得知，作者提出幾個要點 :
 
-1. 利用人臉特徵與五官的關聯訊息得到效能與準確度提升。
+1. 利用人臉特徵與人臉關鍵點的關聯訊息得到效能與準確度提升。
 2. 採用三階段輕量的網路聯集架構，每個階段是從粗到細的過程。
 3. 提出新的online hard sample mining。
 
@@ -21,7 +21,7 @@ MTCNN的CNN網路結構是參考[A Convolutional Neural Network Cascade for Face
 1. 有些filter缺乏權重的多樣性，可能會限制生產判別的描述。我的理解是filter權重不夠多樣造成產生的判斷不夠準確。
 2. 與其他多類別目標偵測與分類來說，人臉偵測是一項具挑戰性的二分類任務，因此需要較少數的filter，但需要區別性較較多的filter。
 
-由於上述兩項缺點，MTCNN的作者做了針對性的調整，**減少filter的數量，且用3x3的filter替換5x5的filter以增加深度而減少計算量，得到更好的效能**。與參考的網路相比耗時少，參考下面列表。
+由於上述兩項缺點，MTCNN的作者做了針對性的調整，**減少filter的數量，用3x3的filter替換5x5的filter以增加深度而減少計算量，得到更好的效能**。與參考的網路相比耗時少，參考下面列表 : 
 
 | Group  | CNN       | 300 Times Forward(s) | Accuracy(%) |
 | ------ | --------- | -------------------- | ----------- |
@@ -37,7 +37,15 @@ MTCNN的CNN網路結構是參考[A Convolutional Neural Network Cascade for Face
 主要分為三個階段與網路，Proposal Network(P-Net)、Refine Network(R-Net)、Output Network(O-Net)，其各自的流程為上圖。看似三層網路可能是相連且參數量較多，但實際上各層網路中間還需要經過轉換處理，大致上理解是用bounding box regression vectors去矯正候選框與用NMS(Non-maximum suppresion)融合高重合候選框，其詳細架構為下圖。下列是三層CNNs的目的與說明 : 
 
 1. **Proposal Network(P-Net)** : 是一個全卷積網路(fully convolutional neural network)，目的是產生候選框與bounding box regression vectors，且方法與[Multi-view Face Detection Using Depp Convolutional Neural Network[2]](https://arxiv.org/pdf/1502.02766.pdf)相似。
-2. **Refine Network(R-Net)** : 其輸入為P-Net輸出的候選框，目的是剔除錯誤(沒有人臉)的候選框。
+
+    *理解與補充* :
+
+    卷積、池化、非線性激勵(激活)都能接受非一致的輸入圖片尺度大小，全連接(fully connection)則是要固定輸入。MTCNN的P-Net網路在訓練時是固定的輸入大小(12 x 12 x 3)，但在測試時是不需要將輸入的圖片一致resize到12 x 12。
+
+    在P-Net網路收到raw image之前，會先有的一個圖像金字塔(image pyramid)的階段
+
+2. **Refine Network(R-Net)** : 是一個CNN，其輸入為P-Net輸出的候選框，目的是剔除錯誤(沒有人臉)的候選框。
+
 3. **Output Network(O-Net)** : 與R-Net相似，但主要目的是更清楚描述人臉，會將R-Net輸出的候選框當作輸入，且一張人臉會產生一個最後的人臉框座標與五個人臉要點的位置。
 
     ![architect](images/MTCNN_architect.png)
@@ -126,3 +134,15 @@ MTCNN的CNN網路結構是參考[A Convolutional Neural Network Cascade for Face
    2.  face minimum size : 放大掃描人臉的最小框。當一張圖片上用slide window(face window)掃描原圖生成候選框時，框體面積增大而掃描面積固定導致速度會提升，但人臉小於基本框體則無法偵測出來。
 2.  網路 : 目前針對網路的部分只有一些想法，主要是此篇論文為2016年提出，在之後提出的方法與改念都可以用在優化的部分。目前可以分稱幾個部分 : 捲積、網路架構、池化、損失函數。
 3.  output : output的部分其實有牽涉到網路結構，雖然是改進網路結構，但主要的思想來自我認為不需要O-Net輸出的facial landmark，而facial landmark確實對人臉偵測有所幫助，因此想切除O-Net只做P-Net與R-Net。目前的結果不甚理想，不知道原因為何，速度在face minimum size = 20下只提升1~2fps且準確度略有下降。
+
+## Source Code
+
+下列所提出的source code我都有實際跑通與測試，我使用的環境是 : Ubuntu 14.04 64-bit, CPU i5-4590 , Memory 16G, GPU GTX 960。 
+
+除了原作是Caffe + MatLab之外，其餘都是Tensorflow + Python，在某篇Blog(找到此篇Blog將附上連結)中提到，好像用Tensorflow框架實現會比用Caffe框架更高效。
+
+1. [原作github](https://github.com/kpzhang93/MTCNN_face_detection_alignment) : 是由論文的原作親自實現並開源的程式碼，且有兩個版本，我還未比較兩版本的差異。
+2. [davidsandberg/github](https://github.com/davidsandberg/facenet/tree/master/src/align) : 這個版本的MTCNN是Python + Tensorflow，也是最多人參考並實現的MTCNN版本，其目的是做FaceNet(人臉辨識)之前的人臉檢測。
+3. [wangbm/github](https://github.com/wangbm/MTCNN-Tensorflow) : 這個版本是基於davidsandberg與原作實現的，有提供完整的網路架構、train與test的腳本，因此是我目前更動最多的版本。
+4. [AITTSMD/github](https://github.com/AITTSMD/MTCNN-Tensorflow) : 此版本是基於Tensorflow中最多人使用的source code之一，作者是中國人，所以在github的issue中提問可以用中文，作者也會用中文回答你。
+5. [ipazc/github](https://github.com/ipazc/mtcnn) : 這份程式碼的作者將程式封裝，對Python的使用者來說，可以直接在terminal中下`pip install mtcnn`來安裝，並直接在python中`import mtcnn`來使用。對單純想使用此演算法的人而言相當方便，但如果你想跟我一樣針對網路做優化或是修改，那就完全不能使用這個版本。
