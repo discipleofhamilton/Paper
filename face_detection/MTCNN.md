@@ -40,9 +40,26 @@ MTCNN的CNN網路結構是參考[A Convolutional Neural Network Cascade for Face
 
     *理解與補充* :
 
-    卷積、池化、非線性激勵(激活)都能接受非一致的輸入圖片尺度大小，全連接(fully connection)則是要固定輸入。MTCNN的P-Net網路在訓練時是固定的輸入大小(12 x 12 x 3)，但在測試時是不需要將輸入的圖片一致resize到12 x 12。
+    卷積、池化、非線性激勵(激活)都能接受非一致的輸入圖片尺度大小，全連接(fully connection)則是要固定輸入。P-Net在訓練時是固定的輸入大小(12 x 12 x 3)，雖然在測試時是不需要將輸入的圖片一致resize到12 x 12。但在P-Net收到raw image之前，會先有一個階段將圖像轉成圖像金字塔(image pyramid)，我認為resize的目的是由於訓練時是固定的，所以為了更符合模型，在測試時識別各尺度的人臉準確度提升。缺點是速度降低 : 1. 生成圖像金字塔速度慢 2.  每種尺度(scale)的圖片都需要輸入模型。
 
-    在P-Net網路收到raw image之前，會先有的一個圖像金字塔(image pyramid)的階段
+    圖像金字塔主要是依照原圖給定不同大小的縮放。在MTCNN中圖像金字塔與face minimum size有關 : 
+
+    ```python
+    factor_count = 0
+    total_boxes = np.empty((0, 9))
+    points = []
+    h = img.shape[0]
+    w = img.shape[1]
+    minl = np.amin([h, w])
+    minl = minl * m
+    
+    # create image (scale) pyramid
+    scales = []
+    while minl >= 12:
+        scales += [m * np.power(factor, factor_count)]
+        minl = minl * factor
+        factor_count += 1
+    ```
 
 2. **Refine Network(R-Net)** : 是一個CNN，其輸入為P-Net輸出的候選框，目的是剔除錯誤(沒有人臉)的候選框。
 
@@ -109,7 +126,7 @@ MTCNN的CNN網路結構是參考[A Convolutional Neural Network Cascade for Face
 
    *理解與疑問* : 
 
-   作者在此將上述三項損失函數統整到一項數學式中，但針對multi-source training的概念有幾項不了解的地方 : 
+   作者將上述三項損失函數統整到一項數學式中，但我對multi-source training的概念有幾項不了解的地方 : 
 
    1. 什麼是sample type indicator，還有其作用是什麼?
    2. 如何把前三項損失函數統整成一項數學式?
@@ -130,8 +147,8 @@ MTCNN的CNN網路結構是參考[A Convolutional Neural Network Cascade for Face
 我認為優化不需要只考慮網路本身，可以分成幾個方向來剖析問題 :
 
 1.  input : 
-   1.  原圖resize : 對input做下採樣。說白一點，有點像是slide window在掃描圖片時，圖片縮小造成需要掃描的面積減掃，導致運行速度加快，準確度下降。如何找到平衡點需要programmer自行調適。
-   2.  face minimum size : 放大掃描人臉的最小框。當一張圖片上用slide window(face window)掃描原圖生成候選框時，框體面積增大而掃描面積固定導致速度會提升，但人臉小於基本框體則無法偵測出來。
+   1. 原圖resize : 對input做下採樣。說白一點，有點像是slide window在掃描圖片時，圖片縮小造成需要掃描的面積減掃，導致運行速度加快，準確度下降。如何找到平衡點需要programmer自行調適。
+   2. face minimum size : 放大掃描人臉的最小框。當一張圖片上用slide window(face window)掃描原圖生成候選框時，框體面積增大而掃描面積固定導致速度會提升，但人臉小於基本框體則無法偵測出來。
 2.  網路 : 目前針對網路的部分只有一些想法，主要是此篇論文為2016年提出，在之後提出的方法與改念都可以用在優化的部分。目前可以分稱幾個部分 : 捲積、網路架構、池化、損失函數。
 3.  output : output的部分其實有牽涉到網路結構，雖然是改進網路結構，但主要的思想來自我認為不需要O-Net輸出的facial landmark，而facial landmark確實對人臉偵測有所幫助，因此想切除O-Net只做P-Net與R-Net。目前的結果不甚理想，不知道原因為何，速度在face minimum size = 20下只提升1~2fps且準確度略有下降。
 
