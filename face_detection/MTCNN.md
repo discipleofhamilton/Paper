@@ -148,12 +148,15 @@ MTCNN的CNN網路結構是參考[A Convolutional Neural Network Cascade for Face
 
 我認為優化不需要只考慮網路本身，可以分成幾個方向來剖析問題 :
 
-1.  input : 
-   1. 原圖resize : 對input做下採樣。說白一點，有點像是slide window在掃描圖片時，圖片縮小造成需要掃描的面積減掃，導致運行速度加快，準確度下降。如何找到平衡點需要programmer自行調適。
-   2. face minimum size : 放大掃描人臉的最小框。當一張圖片上用slide window(face window)掃描原圖生成候選框時，框體面積增大而掃描面積固定導致速度會提升，但人臉小於基本框體則無法偵測出來。
-2.  網路 : 目前針對網路的部分只有一些想法，主要是此篇論文為2016年提出，在之後提出的方法與改念都可以用在優化的部分。目前可以分稱幾個部分 : 捲積、網路架構、池化、損失函數。
-3.  output : output的部分其實有牽涉到網路結構，雖然是改進網路結構，但主要的思想來自我認為不需要O-Net輸出的facial landmark，而facial landmark確實對人臉偵測有所幫助，因此想切除O-Net只做P-Net與R-Net。目前的結果不甚理想，不知道原因為何，速度在face minimum size = 20下只提升1~2fps且準確度略有下降。
-4.  框架 : 
+* input : 
+  * 原圖resize : 對input做下採樣。說白一點，有點像是slide window在掃描圖片時，圖片縮小造成需要掃描的面積減掃，導致運行速度加快，準確度下降。如何找到平衡點需要programmer自行調適。
+  * face minimum size : 放大掃描人臉的最小框。當一張圖片上用slide window(face window)掃描原圖生成候選框時，框體面積增大而掃描面積固定導致速度會提升，但人臉小於基本框體則無法偵測出來。
+
+* 網路 : 目前針對網路的部分只有一些想法，主要是此篇論文為2016年提出，在之後提出的方法與改念都可以用在優化的部分。目前可以分稱幾個部分 : 捲積、網路架構、池化、損失函數。
+
+* output : output的部分其實有牽涉到網路結構，雖然是改進網路結構，但主要的思想來自我認為不需要O-Net輸出的facial landmark，而facial landmark確實對人臉偵測有所幫助，因此想切除O-Net只做P-Net與R-Net。目前的結果不甚理想，不知道原因為何，速度在face minimum size = 20下只提升1~2fps且準確度略有下降。
+
+* 框架 : 
 
 ## Source Code
 
