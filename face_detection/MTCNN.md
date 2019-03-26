@@ -34,7 +34,7 @@ MTCNN的CNN網路結構是參考[A Convolutional Neural Network Cascade for Face
 
 ![pipeline](images/pipeline.png)
 
-主要分為一項前置作業與三個階段網路 : image > image pyramind、Proposal Network(P-Net)、Refine Network(R-Net)、Output Network(O-Net)，其各自的流程為上圖。看似三層網路可能是相連且參數量較多，但實際上各層網路中間還需要經過轉換處理，大致上理解是用bounding box regression vectors去矯正候選框與用NMS(Non-maximum suppresion)融合高重合候選框，其詳細架構為下圖。下列是前置作業、三層CNNs跟網路中間處理的目的與說明 : 
+主要分為一項前置作業與三個階段網路 : image > image pyramind、Proposal Network(P-Net)、Refine Network(R-Net)、Output Network(O-Net)，其各自的流程為上圖。看似三層網路可能是相連且參數量較多，但實際上各層網路中間還需要經過轉換處理，大致上理解是用bounding box regression vectors去矯正候選框與用NMS(Non-maximum suppresion)融合高重合候選框，其詳細架構為下圖。下列是前置作業和三層CNNs的目的與說明 : 
 
 1. **Image Pyramid Stage** : 在P-Net收到raw image之前，會先將圖像轉成圖像金字塔(image pyramid)，我認為目的是由於訓練時是固定的，所以為了更符合模型，在測試時識別各尺度的人臉準確度提升。缺點是速度降低 : 1. 生成圖像金字塔速度慢 2. 每種尺度(scale)的圖片都需要輸入模型。
 
@@ -152,11 +152,13 @@ MTCNN的CNN網路結構是參考[A Convolutional Neural Network Cascade for Face
   * 原圖resize : 對input做下採樣。說白一點，有點像是slide window在掃描圖片時，圖片縮小造成需要掃描的面積減掃，導致運行速度加快，準確度下降。如何找到平衡點需要programmer自行調適。
   * face minimum size : 放大掃描人臉的最小框。當一張圖片上用slide window(face window)掃描原圖生成候選框時，框體面積增大而掃描面積固定導致速度會提升，但人臉小於基本框體則無法偵測出來。
 
-* 網路 : 目前針對網路的部分只有一些想法，主要是此篇論文為2016年提出，在之後提出的方法與改念都可以用在優化的部分。目前可以分稱幾個部分 : 捲積、網路架構、池化、損失函數。
+* 網路 : 目前針對網路的部分只有一些想法，主要是此篇論文為2016年提出，在之後提出的方法與改念都可以用在優化的部分。目前可以分稱幾個部分 : 卷積、網路架構、池化、損失函數、image pyramid stage。
 
 * output : output的部分其實有牽涉到網路結構，雖然是改進網路結構，但主要的思想來自我認為不需要O-Net輸出的facial landmark，而facial landmark確實對人臉偵測有所幫助，因此想切除O-Net只做P-Net與R-Net。目前的結果不甚理想，不知道原因為何，速度在face minimum size = 20下只提升1~2fps且準確度略有下降。
 
-* 框架 : 
+* 框架 : 可以替換或是增加Caffe等框架，例如 : 用OpenCV的dnn、騰訊的ncnn、小米的MACE、intel的OpenVINO或是Qualcomm的SNPE等等。但要特別注意每個框架支援那些其他的參數與模型檔案。
+
+參考 : [MTCNN優化方向](https://blog.csdn.net/Relocy/article/details/84075570)、[高性能計算](https://github.com/Ewenwan/MVision/blob/master/CNN/HighPerformanceComputing/readme.md )。
 
 ## Source Code
 
@@ -164,7 +166,7 @@ MTCNN的CNN網路結構是參考[A Convolutional Neural Network Cascade for Face
 
 除了原作是Caffe + MatLab之外，其餘都是Tensorflow + Python，在某篇Blog(找到此篇Blog將附上連結)中提到，好像用Tensorflow框架實現會比用Caffe框架更高效。
 
-1. [原作github](https://github.com/kpzhang93/MTCNN_face_detection_alignment) : 是由論文的原作親自實現並開源的程式碼，且有兩個版本，我還未比較兩版本的差異。
+1. [論文github](https://github.com/kpzhang93/MTCNN_face_detection_alignment) : 是由論文的原作親自實現並開源的程式碼，且有兩個版本，我還未比較兩版本的差異。
 2. [davidsandberg/github](https://github.com/davidsandberg/facenet/tree/master/src/align) : 這個版本的MTCNN是Python + Tensorflow，也是最多人參考並實現的MTCNN版本，其目的是做FaceNet(人臉辨識)之前的人臉檢測。
 3. [wangbm/github](https://github.com/wangbm/MTCNN-Tensorflow) : 這個版本是基於davidsandberg與原作實現的，有提供完整的網路架構、train與test的腳本，因此是我目前更動最多的版本。
 4. [AITTSMD/github](https://github.com/AITTSMD/MTCNN-Tensorflow) : 此版本是基於Tensorflow中最多人使用的source code之一，作者是中國人，所以在github的issue中提問可以用中文，作者也會用中文回答你。
