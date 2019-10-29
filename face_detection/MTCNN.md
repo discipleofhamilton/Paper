@@ -2,11 +2,11 @@
 
 **簡要說明 :**
 
-此篇[論文](https://kpzhang93.github.io/MTCNN_face_detection_alignment/index.html)發表於2016年，摘要中簡要提出當前人臉偵測與矯正所遇到的困境，例如 : 複雜環境、人臉姿態、光照、occlusions(不確定怎麼翻比較合適)。作者提出一個利用固有的相關關係來提升效能的深度學習框架(Deep Cascaded Multi-task framework)，此框架採用一個三階段CNN的聯集架構用於預測人臉與五官在圖像中的位置，並且是一個從粗到細的方法。除此之外，作者還提出一項新的online hard sample mining策略，可以在不需手動採養選取的情況下自動提高效能。
+此篇[論文](https://kpzhang93.github.io/MTCNN_face_detection_alignment/index.html)發表於2016年，摘要中簡要提出當前人臉偵測與矯正所遇到的困境，例如 : 複雜環境、人臉姿態、光照、遮擋(occlusions)。作者提出一個利用固有的相關關係來提升效能的深度學習框架(Deep Cascaded Multi-task framework)，此框架採用一個三階段CNN的聯集架構用於預測人臉與五官在圖像中的位置，並且是一個從粗到細的方法。除此之外，作者還提出一項新的online hard sample mining策略，可以在不需手動採養選取的情況下自動提高效能。
 
 *補充與理解* :
 
-針對人臉偵測的應用場景來說，我個人認為作者主要把重心放在場景相對複雜的實時 動態人臉偵測。我目前的研究項目與應用場景(門禁系統)中其實是相對簡單，傳統人臉檢測方式(Haar, LBP, dlib)在CPU等級是可以符合大多數的應用，但由於我是用於一般家庭的門禁系統，因此對於在檢測方面魯棒性要求要高，才能滿足用戶體驗，傳統方法嚴重受限於場景。
+針對人臉偵測的應用場景來說，我個人認為作者主要把重心放在場景相對複雜的實時動態人臉偵測。我目前的研究項目與應用場景(門禁系統)中其實是相對簡單，傳統人臉檢測方式(Haar, LBP, dlib)在CPU等級是可以符合大多數的應用，但由於我是用於一般家庭的門禁系統，因此對於在檢測方面魯棒性要求要高，才能滿足用戶體驗，傳統方法嚴重受限於場景。
 
 從摘要中可以得知，作者提出幾個要點 :
 
@@ -57,7 +57,7 @@ MTCNN的CNN網路結構是參考[A Convolutional Neural Network Cascade for Face
         factor_count += 1
     ```
 
-2. **Proposal Network(P-Net)** : 是一個全卷積網路(fully convolutional neural network)，目的是產生候選框與bounding box regression vectors，且方法與[Multi-view Face Detection Using Depp Convolutional Neural Network[2]](https://arxiv.org/pdf/1502.02766.pdf)相似。
+2. **Proposal Network(P-Net)** : 是一個全卷積網路(fully convolutional neural network)，目的是產生候選框與bounding box regression vectors，且方法與[Multi-view Face Detection Using Deep Convolutional Neural Network[2]](https://arxiv.org/pdf/1502.02766.pdf)相似。
 
     *理解與補充* :
 
@@ -77,11 +77,13 @@ MTCNN的CNN網路結構是參考[A Convolutional Neural Network Cascade for Face
 
 1. **人臉分類** : 
 
-   學習目標被表述為一個二分類問題，任意樣本<img src="https://latex.codecogs.com/gif.latex?\inline&space;$x_i$" title="$x_i$" />為例，作者使用交叉熵損失(cross-entropy loss) :
+   學習目標被表述為一個二分類問題，任意樣本$x_i$為例，作者使用交叉熵損失(cross-entropy loss) :
 
-   <img src="https://latex.codecogs.com/gif.latex?\inline&space;L_i^{det}&space;=&space;-(y_i^{det}\log(p_i)&space;&plus;&space;(1&space;-&space;y_i^{det})(1&space;-&space;\log(p_i)))" title="L_i^{det} = -(y_i^{det}\log(p_i) + (1 - y_i^{det})(1 - \log(p_i)))" />
+   $$
+   L_i^{det} = -(y_i^{det}\log(p_i) + (1 - y_i^{det})(1 - \log(p_i)))​
+   $$
 
-   其中<img src="https://latex.codecogs.com/gif.latex?\inline&space;$$p_i$$" title="$$p_i$$" />是由網路產生的機率，用來表示一個樣本是一張人臉的機率。<img src="https://latex.codecogs.com/gif.latex?\inline&space;$y_i^{det}&space;\in&space;\{0,&space;1\}$" title="$y_i^{det} \in \{0, 1\}$" />表示ground-truth 標籤。
+   其中$$p_i​$$是由網路產生的機率，用來表示一個樣本是一張人臉的機率。$y_i^{det} \in \{0, 1\}​$表示ground-truth 標籤。
 
    *理解與疑問* : 
 
@@ -89,27 +91,30 @@ MTCNN的CNN網路結構是參考[A Convolutional Neural Network Cascade for Face
 
    cross-entropy loss function本身在loss function的兩大類(regression/classification)中屬於分類，且主要用於二分類問題，其中的entropy是**接收的所有資訊所包含訊息的平均量**，用來察看資料的混亂度與不確定性。cross-entropy的含意是真實類別的判斷正確機率，可以得知當cross-entropy越小模型的效果越好([詳細說明1](https://medium.com/@chih.sheng.huang821/%E6%A9%9F%E5%99%A8-%E6%B7%B1%E5%BA%A6%E5%AD%B8%E7%BF%92-%E5%9F%BA%E7%A4%8E%E4%BB%8B%E7%B4%B9-%E6%90%8D%E5%A4%B1%E5%87%BD%E6%95%B8-loss-function-2dcac5ebb6cb)、[詳細說明2](https://medium.com/@chungyizhen/cross-entropy%E7%9A%84%E7%9B%B4%E8%A7%80%E7%90%86%E8%A7%A3-82e525e3780c))。
 
-   近年在CNNs中較常見的Softmax loss也是基於cross-entropy的變形，因此我有個疑問為何作者只單純使用cross-entropy而非Sigmoid或是Softmax + cross-entropy。
+   近年在CNNs中較常見的Softmax loss也是基於cross-entropy的變形，因此我有個疑問**為何作者只單純使用cross-entropy而非Sigmoid或是Softmax + cross-entropy**。
 
 2. **Bounding box regression** : 
 
-   作者預測任意候選框與其最近的ground truth之間的位移，學習目標被表述為一個回歸問題，且對任意樣本<img src="https://latex.codecogs.com/gif.latex?\inline&space;$x_i$" title="$x_i$" />使用歐式損失(Euclidean loss) :
+   作者預測任意候選框與其最近的ground truth之間的位移，學習目標被表述為一個回歸問題，且對任意樣本$x_i$使用歐式損失(Euclidean loss) :
 
-   <img src="https://latex.codecogs.com/gif.latex?\inline&space;L_i^{box}&space;=&space;||\hat{y}_i^{box}&space;-&space;y_i^{box}||_2^2" title="L_i^{box} = ||\hat{y}_i^{box} - y_i^{box}||_2^2" />
-
-   其中<img src="https://latex.codecogs.com/gif.latex?\inline&space;$$\hat{y}_i^{box}$$" title="$$\hat{y}_i^{box}$$" />回歸目標是從網路獲取的，且<img src="https://latex.codecogs.com/gif.latex?\inline&space;$$y_i^{box}$$" title="$$y_i^{box}$$" />是ground-truth的座標。總共有四個座標，包含左上、寬、高等等，且其限制用數學式表示為<img src="https://latex.codecogs.com/gif.latex?\inline&space;$y_i^{box}\in\mathbb{R}^4$" title="$y_i^{box}\in\mathbb{R}^4$" />，<img src="https://latex.codecogs.com/gif.latex?\inline&space;$$\mathbb{R}$$" title="$$\mathbb{R}$$" />的意思是實數。
+   $$
+   L_i^{box} = ||\hat{y}_i^{box} - y_i^{box}||_2^2
+   $$
+   其中$$\hat{y}_i^{box}$$回歸目標是從網路獲取的，且$$y_i^{box}$$是ground-truth的座標。總共有四個座標，包含左上、寬、高等等，且其限制用數學式表示為$y_i^{box}\in\mathbb{R}^4$，$$\mathbb{R}$$的意思是實數。
 
    *理解與疑問* : 
 
-   <img src="https://latex.codecogs.com/gif.latex?||x||_2" title="||x||_2" />代表的是第二正規化(范式)，單純將上述的公式轉換後發現與L2公式相同，但歐式損失定義為<img src="https://latex.codecogs.com/gif.latex?\frac{1}{2N}\sum_{i=1}^N||x_i^1-x_i^2||_2^2" title="\frac{1}{2N}\sum_{i=1}^N||x_i^1-x_i^2||_2^2" />，可以發現與上述的公式比多了<img src="https://latex.codecogs.com/gif.latex?\frac{1}{2N}" title="\frac{1}{2N}" />，所以在這裡我有一些困惑。除此之外，還有在此用歐式損失的涵義為何目前我也沒理解。
+   $||x||_2$代表的是第二正規化(范式)，單純將上述的公式轉換後發現與L2公式相同，但歐式損失定義為$\frac{1}{2N}\sum_{i=1}^N||x_i^1-x_i^2||_2^2$，可以發現與上述的公式比多了<img src="https://latex.codecogs.com/gif.latex?\frac{1}{2N}" title="\frac{1}{2N}" />，所以在這裡我有一些困惑。除此之外，還有在此用歐式損失的涵義為何目前我也沒理解。
 
 3. **人臉關鍵點定位 (facial landmark localization)** : 
 
    與bounding box regression任務相似，人臉關鍵點偵測(facial landmark detection)被表述為一個回歸問題，且作者最小化了歐式損失(Euclidean loss) : 
 
-   <img src="https://latex.codecogs.com/gif.latex?\inline&space;L_i^{landmark}&space;=&space;||\hat{y}_i^{landmark}&space;-&space;y_i^{landmark}||_2^2" title="L_i^{landmark} = ||\hat{y}_i^{landmark} - y_i^{landmark}||_2^2" />
+   $$
+   L_i^{landmark} = ||\hat{y}_i^{landmark} - y_i^{landmark}||_2^2
+   $$
 
-   其中<img src="https://latex.codecogs.com/gif.latex?\inline&space;\hat{y}_i^{landmark}" title="\hat{y}_i^{landmark}" />是從網路獲取的人臉關鍵點座標，<img src="https://latex.codecogs.com/gif.latex?\inline&space;y_i^{landmark}" title="y_i^{landmark}" />則是ground-truth座標。總共有五個人臉關鍵點，包含雙眼、鼻子與左右嘴角，且<img src="https://latex.codecogs.com/gif.latex?\inline&space;y_i^{box}\in\mathbb{R}^{10}" title="y_i^{box}\in\mathbb{R}^{10}" />。
+   其中$\hat{y}_i^{landmark}$是從網路獲取的人臉關鍵點座標，$y_i^{landmark}$則是ground-truth座標。總共有五個人臉關鍵點，包含雙眼、鼻子與左右嘴角，且$y_i^{box}\in\mathbb{R}^{10}​$。
 
    *理解與疑問* : 
 
@@ -120,11 +125,13 @@ MTCNN的CNN網路結構是參考[A Convolutional Neural Network Cascade for Face
 
 4. **Multi-source training** : 
 
-   將不同任務分配到每個CNNs中，造就在學習的過程中需要不同類型的訓練圖片，例如 : 包含人臉的、不包含人臉的與部分矯正(對齊)的人臉圖片。在某些情況下，上述的損失函數可能不會全部都用到，例如 : 圖片背景區域樣本只計算<img src="https://latex.codecogs.com/gif.latex?\inline&space;L_i^{det}" title="L_i^{det}" />，另外兩個損失函數的數值被設定為0。此任務可以直接用一個sample type indicator實現，所有的學習目標可以被表示為 : 
+   將不同任務分配到每個CNNs中，造就在學習的過程中需要不同類型的訓練圖片，例如 : 包含人臉的、不包含人臉的與部分矯正(對齊)的人臉圖片。在某些情況下，上述的損失函數可能不會全部都用到，例如 : 圖片背景區域樣本只計算$L_i^{det}$，另外兩個損失函數的數值被設定為0。此任務可以直接用一個sample type indicator實現，所有的學習目標可以被表示為 : 
 
-   <img src="https://latex.codecogs.com/gif.latex?\inline&space;\min&space;\sum_{i=1}^N{&space;\sum_{&space;j\in\{det,box,landmark\}&space;}&space;{\alpha_j\beta_i^jL_i^j}&space;}" title="\min \sum_{i=1}^N{ \sum_{ j\in\{det,box,landmark\} } {\alpha_j\beta_i^jL_i^j} }" />
+   $$
+   \min \sum_{i=1}^N{ \sum_{ j\in\{det,box,landmark\} } {\alpha_j\beta_i^jL_i^j} }
+   $$
 
-   其中<img src="https://latex.codecogs.com/gif.latex?\inline&space;N" title="N" />是訓練樣本的數量，<img src="https://latex.codecogs.com/gif.latex?\inline&space;\alpha_j" title="\alpha_j" />表示任務的重要性。作者為了得到精度更高的人臉關鍵點定位，在P-Net與R-Net中用的參數為<img src="https://latex.codecogs.com/gif.latex?\inline&space;(\alpha_{det}=1,\alpha_{box}=0.5,\alpha_{landmark}=0.5)" title="(\alpha_{det}=1,\alpha_{box}=0.5,\alpha_{landmark}=0.5)" />，O-Net為<img src="https://latex.codecogs.com/gif.latex?\inline&space;(\alpha_{det}=1,\alpha_{box}=0.5,\alpha_{landmark}=1)" title="(\alpha_{det}=1,\alpha_{box}=0.5,\alpha_{landmark}=1)" />。<img src="https://latex.codecogs.com/gif.latex?\inline&space;\beta_i^j\in\{0,1\}" title="\beta_i^j\in\{0,1\}" />則是**此**樣本類型指示器 (<img src="https://latex.codecogs.com/gif.latex?\inline&space;\beta_i^j\in\{0,1\}" title="\beta_i^j\in\{0,1\}" />is the sample type indicator)，在此條件下用隨機梯度下降(stochastic gradient descent)訓練CNNs是很自然的。
+   其中$N$是訓練樣本的數量，$\alpha_j$表示任務的重要性。作者為了得到精度更高的人臉關鍵點定位，在P-Net與R-Net中用的參數為$(\alpha_{det}=1,\alpha_{box}=0.5,\alpha_{landmark}=0.5)$，O-Net為$(\alpha_{det}=1,\alpha_{box}=0.5,\alpha_{landmark}=1)$。$\beta_i^j\in\{0,1\}$則是**此**樣本類型指示器 ($\beta_i^j\in\{0,1\}$ is the sample type indicator)，在此條件下用隨機梯度下降(stochastic gradient descent)訓練CNNs是很自然的。
 
    *理解與疑問* : 
 
@@ -168,6 +175,6 @@ MTCNN的CNN網路結構是參考[A Convolutional Neural Network Cascade for Face
 
 1. [論文github](https://github.com/kpzhang93/MTCNN_face_detection_alignment) : 是由論文的原作親自實現並開源的程式碼，且有兩個版本，我還未比較兩版本的差異。
 2. [davidsandberg/github](https://github.com/davidsandberg/facenet/tree/master/src/align) : 這個版本的MTCNN是Python + Tensorflow，也是最多人參考並實現的MTCNN版本，其目的是做FaceNet(人臉辨識)之前的人臉檢測。
-3. [wangbm/github](https://github.com/wangbm/MTCNN-Tensorflow) : 這個版本是基於davidsandberg與原作實現的，有提供完整的網路架構、train與test的腳本，因此是我目前更動最多的版本。
+3. [wangbm/github](https://github.com/wangbm/MTCNN-Tensorflow) : 這個版本是基於davidsandberg與原作實現的，有提供完整的網路架構、train與test的腳本，是我目前更動最多的版本。
 4. [AITTSMD/github](https://github.com/AITTSMD/MTCNN-Tensorflow) : 此版本是基於Tensorflow中最多人使用的source code之一，作者是中國人，所以在github的issue中提問可以用中文，作者也會用中文回答你。
 5. [ipazc/github](https://github.com/ipazc/mtcnn) : 這份程式碼的作者將程式封裝，對Python的使用者來說，可以直接在terminal中下`pip install mtcnn`來安裝，並直接在python中`import mtcnn`來使用。對單純想使用此演算法的人而言相當方便，但如果你想跟我一樣針對網路做優化或是修改，那就完全不能使用這個版本。
