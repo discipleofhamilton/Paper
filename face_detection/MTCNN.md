@@ -77,10 +77,10 @@ MTCNN的CNN網路結構是參考[A Convolutional Neural Network Cascade for Face
 
 1. **人臉分類** : 
 
-   學習目標被表述為一個二分類問題，任意樣本$x_i$為例，作者使用交叉熵損失(cross-entropy loss) :
+   學習目標被表述為一個二分類問題，任意樣本$x_i​$為例，作者使用交叉熵損失(cross-entropy loss) :
 
    $$
-   L_i^{det} = -(y_i^{det}\log(p_i) + (1 - y_i^{det})(1 - \log(p_i)))​
+   L_i^{det} = -(y_i^{det}\log(p_i) + (1 - y_i^{det})(1 - \log(p_i)))
    $$
 
    其中$$p_i​$$是由網路產生的機率，用來表示一個樣本是一張人臉的機率。$y_i^{det} \in \{0, 1\}​$表示ground-truth 標籤。
@@ -104,7 +104,7 @@ MTCNN的CNN網路結構是參考[A Convolutional Neural Network Cascade for Face
 
    *理解與疑問* : 
 
-   $||x||_2$代表的是第二正規化(范式)，單純將上述的公式轉換後發現與L2公式相同，但歐式損失定義為$\frac{1}{2N}\sum_{i=1}^N||x_i^1-x_i^2||_2^2$，可以發現與上述的公式比多了<img src="https://latex.codecogs.com/gif.latex?\frac{1}{2N}" title="\frac{1}{2N}" />，所以在這裡我有一些困惑。除此之外，還有在此用歐式損失的涵義為何目前我也沒理解。
+   $||x||_2$代表的是第二正規化(范式)，單純將上述的公式轉換後發現與L2公式相同，但歐式損失定義為$\frac{1}{2N}\sum_{i=1}^N||x_i^1-x_i^2||_2^2$，可以發現與上述的公式比多了$\frac{1}{2N}$，所以在這裡我有一些困惑。除此之外，還有在此用歐式損失的涵義為何目前我也沒理解。
 
 3. **人臉關鍵點定位 (facial landmark localization)** : 
 
