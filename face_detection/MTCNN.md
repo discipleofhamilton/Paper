@@ -77,11 +77,11 @@ MTCNN的CNN網路結構是參考[A Convolutional Neural Network Cascade for Face
 
 1. **人臉分類** : 
 
-   學習目標被表述為一個二分類問題，任意樣本$x_i$為例，作者使用交叉熵損失(cross-entropy loss) :
+   學習目標被表述為一個二分類問題，任意樣本<img src="https://latex.codecogs.com/png.latex?x_i"/>為例，作者使用交叉熵損失(cross-entropy loss) :
 
-   <img src="https://latex.codecogs.com/png.latex?L_i^{det} = -(y_i^{det}\log(p_i) + (1 - y_i^{det})(1 - \log(p_i)))" align='center'>
+   <img src="https://latex.codecogs.com/png.latex?L_i^{det} = -(y_i^{det}\log(p_i) + (1 - y_i^{det})(1 - \log(p_i)))" align='center'/>
 
-   其中<img src="https://latex.codecogs.com/png.latex?p_i">是由網路產生的機率，用來表示一個樣本是一張人臉的機率。<img src="https://latex.codecogs.com/png.latex?y_i^{det} \in \{0, 1\}">表示ground-truth 標籤。
+   其中<img src="https://latex.codecogs.com/png.latex?p_i"/>是由網路產生的機率，用來表示一個樣本是一張人臉的機率。<img src="https://latex.codecogs.com/png.latex?y_i^{det} \in \{0, 1\}"/>表示ground-truth 標籤。
 
    *理解與疑問* : 
 
@@ -95,20 +95,20 @@ MTCNN的CNN網路結構是參考[A Convolutional Neural Network Cascade for Face
 
    作者預測任意候選框與其最近的ground truth之間的位移，學習目標被表述為一個回歸問題，且對任意樣本<img src="https://latex.codecogs.com/png.latex?x_i">使用歐式損失(Euclidean loss) :
 
-   <img src="https://latex.codecogs.com/png.latex?L_i^{box} = ||\hat{y}_i^{box} - y_i^{box}||_2^2" align='center'>
-   其中<img src="https://latex.codecogs.com/png.latex?\hat{y}_i^{box}">回歸目標是從網路獲取的，且<img src="https://latex.codecogs.com/png.latex?y_i^{box}">是ground-truth的座標。總共有四個座標，包含左上、寬、高等等，且其限制用數學式表示為<img src="https://latex.codecogs.com/png.latex?y_i^{box}\in\mathbb{R}^4">，<img src="https://latex.codecogs.com/png.latex?\mathbb{R}">的意思是實數。
+   <img src="https://latex.codecogs.com/png.latex?L_i^{box} = ||\hat{y}_i^{box} - y_i^{box}||_2^2" align='center'/>
+   其中<img src="https://latex.codecogs.com/png.latex?\hat{y}_i^{box}"/>回歸目標是從網路獲取的，且<img src="https://latex.codecogs.com/png.latex?y_i^{box}"/>是ground-truth的座標。總共有四個座標，包含左上、寬、高等等，且其限制用數學式表示為<img src="https://latex.codecogs.com/png.latex?y_i^{box}\in\mathbb{R}^4"/>，<img src="https://latex.codecogs.com/png.latex?\mathbb{R}"/>的意思是實數。
 
    *理解與疑問* : 
 
-   <img src="https://latex.codecogs.com/png.latex?||x||_2">代表的是第二正規化(范式)，單純將上述的公式轉換後發現與L2公式相同，但歐式損失定義為<img src="https://latex.codecogs.com/png.latex?\frac{1}{2N}\sum_{i=1}^N||x_i^1-x_i^2||_2^2">，可以發現與上述的公式比多了<img src="https://latex.codecogs.com/png.latex?\frac{1}{2N}">，所以在這裡我有一些困惑。除此之外，還有在此用歐式損失的涵義為何目前我也沒理解。
+   <img src="https://latex.codecogs.com/png.latex?||x||_2"/>代表的是第二正規化(范式)，單純將上述的公式轉換後發現與L2公式相同，但歐式損失定義為<img src="https://latex.codecogs.com/png.latex?\frac{1}{2N}\sum_{i=1}^N||x_i^1-x_i^2||_2^2"/>，可以發現與上述的公式比多了<img src="https://latex.codecogs.com/png.latex?\frac{1}{2N}"/>，所以在這裡我有一些困惑。除此之外，還有在此用歐式損失的涵義為何目前我也沒理解。
 
 3. **人臉關鍵點定位 (facial landmark localization)** : 
 
    與bounding box regression任務相似，人臉關鍵點偵測(facial landmark detection)被表述為一個回歸問題，且作者最小化了歐式損失(Euclidean loss) : 
 
-   <img src="https://latex.codecogs.com/png.latex?L_i^{landmark} = ||\hat{y}_i^{landmark} - y_i^{landmark}||_2^2" align='center'>
+   <img src="https://latex.codecogs.com/png.latex?L_i^{landmark} = ||\hat{y}_i^{landmark} - y_i^{landmark}||_2^2" align='center'/>
 
-   其中<img src="https://latex.codecogs.com/png.latex?\hat{y}_i^{landmark}">是從網路獲取的人臉關鍵點座標，<img src="https://latex.codecogs.com/png.latex?y_i^{landmark}">則是ground-truth座標。總共有五個人臉關鍵點，包含雙眼、鼻子與左右嘴角，且<img src="https://latex.codecogs.com/png.latex?y_i^{box}\in\mathbb{R}^{10}">。
+   其中<img src="https://latex.codecogs.com/png.latex?\hat{y}_i^{landmark}"/>是從網路獲取的人臉關鍵點座標，<img src="https://latex.codecogs.com/png.latex?y_i^{landmark}"/>則是ground-truth座標。總共有五個人臉關鍵點，包含雙眼、鼻子與左右嘴角，且<img src="https://latex.codecogs.com/png.latex?y_i^{box}\in\mathbb{R}^{10}"/>。
 
    *理解與疑問* : 
 
@@ -119,11 +119,11 @@ MTCNN的CNN網路結構是參考[A Convolutional Neural Network Cascade for Face
 
 4. **Multi-source training** : 
 
-   將不同任務分配到每個CNNs中，造就在學習的過程中需要不同類型的訓練圖片，例如 : 包含人臉的、不包含人臉的與部分矯正(對齊)的人臉圖片。在某些情況下，上述的損失函數可能不會全部都用到，例如 : 圖片背景區域樣本只計算$L_i^{det}$，另外兩個損失函數的數值被設定為0。此任務可以直接用一個sample type indicator實現，所有的學習目標可以被表示為 : 
+   將不同任務分配到每個CNNs中，造就在學習的過程中需要不同類型的訓練圖片，例如 : 包含人臉的、不包含人臉的與部分矯正(對齊)的人臉圖片。在某些情況下，上述的損失函數可能不會全部都用到，例如 : 圖片背景區域樣本只計算<img src="https://latex.codecogs.com/png.latex?L_i^{det}"/>，另外兩個損失函數的數值被設定為0。此任務可以直接用一個sample type indicator實現，所有的學習目標可以被表示為 : 
 
-   <img src="https://latex.codecogs.com/png.latex?\min \sum_{i=1}^N{ \sum_{ j\in\{det,box,landmark\} } {\alpha_j\beta_i^jL_i^j} }" align='center'>
+   <img src="https://latex.codecogs.com/png.latex?\min \sum_{i=1}^N{ \sum_{ j\in\{det,box,landmark\} } {\alpha_j\beta_i^jL_i^j} }" align='center'/>
 
-   其中$N$是訓練樣本的數量，$\alpha_j$表示任務的重要性。作者為了得到精度更高的人臉關鍵點定位，在P-Net與R-Net中用的參數為<img src="https://latex.codecogs.com/png.latex?(\alpha_{det}=1,\alpha_{box}=0.5,\alpha_{landmark}=0.5)">，O-Net為<img src="https://latex.codecogs.com/png.latex?(\alpha_{det}=1,\alpha_{box}=0.5,\alpha_{landmark}=1)">。<img src="https://latex.codecogs.com/png.latex?\beta_i^j\in\{0,1\}">則是**此**樣本類型指示器 (<img src="https://latex.codecogs.com/png.latex?\beta_i^j\in\{0,1\}"> is the sample type indicator)，在此條件下用隨機梯度下降(stochastic gradient descent)訓練CNNs是很自然的。
+   其中<img src="https://latex.codecogs.com/png.latex?N"/>是訓練樣本的數量，<img src="https://latex.codecogs.com/png.latex?\alpha_j"/>表示任務的重要性。作者為了得到精度更高的人臉關鍵點定位，在P-Net與R-Net中用的參數為<img src="https://latex.codecogs.com/png.latex?(\alpha_{det}=1,\alpha_{box}=0.5,\alpha_{landmark}=0.5)"/>，O-Net為<img src="https://latex.codecogs.com/png.latex?(\alpha_{det}=1,\alpha_{box}=0.5,\alpha_{landmark}=1)"/>。<img src="https://latex.codecogs.com/png.latex?\beta_i^j\in\{0,1\}"/>則是**此**樣本類型指示器 (<img src="https://latex.codecogs.com/png.latex?\beta_i^j\in\{0,1\}"/> is the sample type indicator)，在此條件下用隨機梯度下降(stochastic gradient descent)訓練CNNs是很自然的。
 
    *理解與疑問* : 
 
